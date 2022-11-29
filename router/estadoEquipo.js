@@ -1,9 +1,11 @@
 const { Router } = require("express");
 const router = Router();
 const EstadoEquipo = require("../models/EstadoEquipo");
-const { validateComputerStatus } = require('../helpers/validarEstadoEquipo')
+const { validateComputerStatus } = require('../helpers/validarEstadoEquipo');
+const {validarJWT} = require('../middlewares/validar-jwt');
+const {validarRolAdmin} = require('../middlewares/validar-rol');
 //metodo get
-router.get("/", async (req, res) => {
+router.get("/", [validarJWT], async (req, res) => {
   try {
     const computerStatus = await EstadoEquipo.find();
     res.send(computerStatus);
@@ -14,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:estadoEquipoId", async (req, res) => {
+router.get("/:estadoEquipoId", [validarJWT], async (req, res) => {
   try {
     const estadoEquipo = await EstadoEquipo.findById(req.params.estadoEquipoId);
     if (!estadoEquipo) {
@@ -28,7 +30,7 @@ router.get("/:estadoEquipoId", async (req, res) => {
 });
 
 //req hace referencia a la petición
-router.post("/", async (req, res) => {
+router.post("/", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateComputerStatus(req);
     if (validations.length > 0) {
@@ -52,7 +54,7 @@ router.post("/", async (req, res) => {
   }
 });
 //res hace referencia a la respuesta
-router.put("/:estadoEquipoId", async (req, res) => {
+router.put("/:estadoEquipoId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateComputerStatus(req);
     if (validations.length > 0) {
@@ -76,7 +78,7 @@ router.put("/:estadoEquipoId", async (req, res) => {
   }
 });
 
-router.delete("/:estadoEquipoId", async (req, res) => {
+router.delete("/:estadoEquipoId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     //primero debemos buscar el id del estadoEquipo
     let computerStatus = await EstadoEquipo.findById(req.params.estadoEquipoId);

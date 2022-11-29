@@ -7,6 +7,8 @@ const UserSchema = Schema({
   name: { type: String, required: true },
   //Email requerido y unico
   email: { type: String, require: true, unique: true },
+  passw: {type: String, required: true},
+  rol: {type: String, required: true, enum: ["Admin", "Docente"]},
   //estado requerido enumerable
   status: { type: String, required: true, enum: ["Activo", "Inactivo"] },
   //fecha de creación

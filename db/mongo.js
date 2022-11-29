@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+//Un modulo que se encarga de gestionar la conexión a la bd
 const getConnection = async () => {
   try {
     const url =

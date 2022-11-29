@@ -15,8 +15,7 @@ const InventorySchema = Schema({
     //de la foram referenciando documentos
     userCharge: { type: Schema.Types.ObjectId, ref: "Usuario", required: false },
     brand: { type: Schema.Types.ObjectId, ref: "Marca", required: true },
-    computerStatus: {type: Schema.Types.ObjectId, ref: "EstadoEquipo", required: true,
-    },
+    computerStatus: {type: Schema.Types.ObjectId, ref: "EstadoEquipo", required: true},
     computerType: {type: Schema.Types.ObjectId,ref: "TipoEquipo",required: true,},
     creationDate: { type: Date, required: true },
     updateDate: { type: Date, required: true },

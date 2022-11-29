@@ -2,8 +2,10 @@ const { Router } = require("express");
 const TipoEquipo = require("../models/TipoEquipo");
 const {validateComputerType} = require('../helpers/validarTipoEquipo')
 const router = Router();
+const {validarJWT} = require('../middlewares/validar-jwt');
+const {validarRolAdmin} = require('../middlewares/validar-rol');
 
-router.get("/", async (req, res) => {
+router.get("/", [validarJWT], async (req, res) => {
   try {
     const computerType = await TipoEquipo.find();
     res.send(computerType);
@@ -14,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:tipoEquipo", async (req, res) => {
+router.get("/:tipoEquipo", [validarJWT], async (req, res) => {
   try {
     const tipoEquipo = await TipoEquipo.findById(req.params.tipoEquipo);
     if (!tipoEquipo) {
@@ -27,7 +29,7 @@ router.get("/:tipoEquipo", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateComputerType(req);
     if (validations.length > 0) {
@@ -50,7 +52,7 @@ router.post("/", async (req, res) => {
     res.status(500).send("Ocurrió un error");
   }
 });
-router.put("/:tipoEquipoId", async (req, res) => {
+router.put("/:tipoEquipoId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateComputerType(req);
     if (validations.length > 0) {
@@ -75,7 +77,7 @@ router.put("/:tipoEquipoId", async (req, res) => {
   }
 });
 
-router.delete("/:tipoEquipoId", async (req, res) => {
+router.delete("/:tipoEquipoId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     //primero debemos buscar el id del estadoEquipo
     let computerType = await TipoEquipo.findById(req.params.tipoEquipoId);

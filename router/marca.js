@@ -2,8 +2,10 @@ const { Router } = require("express");
 const router = Router();
 const Marca = require("../models/Marca");
 const {validateBrand} = require('../helpers/validarMarca')
+const {validarJWT} = require('../middlewares/validar-jwt');
+const {validarRolAdmin} = require('../middlewares/validar-rol');
 
-router.get("/", async (req, res) => {
+router.get("/", [validarJWT], async (req, res) => {
   try {
     const brands = await Marca.find();
     res.send(brands);
@@ -14,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:marcaId", async (req, res) => {
+router.get("/:marcaId", [validarJWT], async (req, res) => {
   try {
     const marca = await Marca.findById(req.params.marcaId);
     if (!marca) {
@@ -27,7 +29,7 @@ router.get("/:marcaId", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateBrand(req);
     if (validations.length > 0) {
@@ -51,7 +53,7 @@ router.post("/", async (req, res) => {
     res.status(500).send("Ocurrió un error");
   }
 });
-router.put("/:marcaId", async (req, res) => {
+router.put("/:marcaId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateBrand(req);
     if (validations.length > 0) {
@@ -80,7 +82,7 @@ router.put("/:marcaId", async (req, res) => {
   }
 });
 
-router.delete("/:marcaId", async (req, res) => {
+router.delete("/:marcaId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     //primero debemos buscar el id de marca
     let brand = await Marca.findById(req.params.marcaId);

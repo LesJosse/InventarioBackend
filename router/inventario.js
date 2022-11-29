@@ -3,8 +3,10 @@ const Inventario = require("../models/Inventario");
 const { validateInventory } = require("../helpers/validar");
 const { findById } = require("../models/Inventario");
 const router = Router();
+const {validarJWT} = require('../middlewares/validar-jwt');
+const {validarRolAdmin} = require('../middlewares/validar-rol')
 
-router.get("/", async (req, res) => {
+router.get("/", [validarJWT], async (req, res) => {
   try {
     //populate recibe un arreglo
     const inventory = await Inventario.find().populate([
@@ -32,7 +34,7 @@ router.get("/", async (req, res) => {
     res.status(500).send("Ocurrió un error");
   }
 });
-router.post("/", async (req, res) => {
+router.post("/", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateInventory(req);
     if (validations.length > 0) {
@@ -70,7 +72,7 @@ router.post("/", async (req, res) => {
     res.status(500).send("Ocurrió un error");
   }
 });
-router.put("/:inventarioId", async (req, res) => {
+router.put("/:inventarioId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     const validations = validateInventory(req);
     if (validations.length > 0) {
@@ -110,7 +112,7 @@ router.put("/:inventarioId", async (req, res) => {
   }
 });
 
-router.delete("/:inventarioId", async (req, res) => {
+router.delete("/:inventarioId", [validarJWT, validarRolAdmin], async (req, res) => {
   try {
     //obtener usuario por id
     let inventory = await Inventario.findById(req.params.inventarioId);
@@ -130,7 +132,7 @@ router.delete("/:inventarioId", async (req, res) => {
   }
 });
 
-router.get("/:inventarioId", async (req, res) => {
+router.get("/:inventarioId", [validarJWT], async (req, res) => {
   try {
     const inventario = await Inventario.findById(req.params.inventarioId);
     if (!inventario) {

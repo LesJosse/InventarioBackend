@@ -1,54 +1,76 @@
 //En principio debemos inportar router de express
 const { Router } = require("express");
+const { validationResult, check } = require("express-validator");
 const router = Router();
 //importamos la clase de Usuario
 const Usuario = require("../models/Usuario");
-const { validateUser } = require("../helpers/validarUsuario");
+const bcrypt = require('bcryptjs');
+const {validarJWT} = require('../middlewares/validar-jwt');
+const { validarRolAdmin } = require('../middlewares/validar-rol');
+
 
 //para crear nuesvos usuarios
-router.post("/", async (req, res) => {
-  //los datos los recuperamos a travees del req.body
-  try {
-    const validations = validateUser(req);
-    if (validations.length > 0) {
-      return res.status(400).send(validations);
+router.post(
+  "/",
+  [
+    check("name", "name.error").not().isEmpty(),
+    check("email", "emal.error").isEmail(),
+    check("passw", "passw.error").not().isEmpty(),
+    check("rol", "name.error").isIn(["Admin", "Docente"]),
+    check("status", "status.error").isIn(["Activo", "Inactivo"]),
+    validarJWT,
+    validarRolAdmin
+  ],
+  async (req, res) => {
+    //los datos los recuperamos a travees del req.body
+    try {
+      const validations = validationResult(req);  
+      if (!validations.isEmpty()) {
+        return res.status(400).json({ mensaje: validations.array() });//Si hay errores
+      }
+
+      console.log("Objeto recibido con exito", req.body);
+      //Validar el correo
+      const exist = await Usuario.findOne({ email: req.body.email }); //buscamos el email en la bd por coincidencias
+      console.log("Respuesta existe usuario", exist);
+      if (exist) {
+        return res.status(400).send("El email ya existe");
+      }
+
+      let user = new Usuario();
+      user.name = req.body.name;
+      user.email = req.body.email;
+      
+      const salt = bcrypt.genSaltSync();//para generar un hash 
+      const pass = bcrypt.hashSync(req.body.passw, salt);
+      user.passw = pass;
+      
+      user.rol = req.body.rol;
+      user.status = req.body.status;
+      user.creationDate = new Date();
+      user.updateDate = new Date();
+
+      user = await user.save(); //async = para que el llamado ocurra linea a linea y espere a que se haga la petición
+      res.send(user);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ mensaje: "Error interno del servidor" });
     }
-
-    console.log("Objeto recibido con exito", req.body);
-
-    const exist = await Usuario.findOne({ email: req.body.email });
-    console.log("Respuesta existe usuario", exist);
-    if (exist) {
-      return res.status(400).send("El email ya existe");
-    }
-
-    let user = new Usuario();
-    user.name = req.body.name;
-    user.email = req.body.email;
-    user.status = req.body.status;
-    user.creationDate = new Date();
-    user.updateDate = new Date();
-
-    user = await user.save();
-    res.send(user);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Ocurrión un error");
   }
-});
+);
 
 //Req = todos los datos que le enviamos al recurso
-router.get("/", async (req, res) => {
+router.get("/", [validarJWT],async (req, res) => {
   try {
     const users = await Usuario.find();
     res.send(users);
   } catch (err) {
     console.log(err);
-    res.status(500).send("Ocurrió un error");
+    res.status(500).json({ mensaje: "Error interno en el servidor" });
   }
 });
 
-router.get("/:usuarioId", async (req, res) => {
+router.get("/:usuarioId", [validarJWT], async (req, res) => {
   try {
     const usuario = await Usuario.findById(req.params.usuarioId);
     if (!usuario) {
@@ -61,11 +83,19 @@ router.get("/:usuarioId", async (req, res) => {
   }
 });
 
-router.put("/:usuarioId", async function (req, res) {
+router.put("/:usuarioId", [
+  check("name", "name.error").not().isEmpty(),
+    check("email", "emal.error").isEmail(),
+    check("passw", "passw.error").not().isEmpty(),
+    check("rol", "name.error").isIn(["Admin", "Docente"]),
+    check("status", "status.error").isIn(["Activo", "Inactivo"]),
+    validarJWT,
+    validarRolAdmin
+], async function (req, res) {
   try {
-    const validations = validateUser(req);
-    if (validations.length > 0) {
-      return res.status(400).send(validations);
+    const validations = validationResult(req);  
+    if (!validations.isEmpty()) {
+      return res.status(400).json({ mensaje: validations.array() });//Si hay errores
     }
 
     console.log("Objeto recibido", req.body, req.params); //
@@ -85,8 +115,14 @@ router.put("/:usuarioId", async function (req, res) {
       return res.status(400).send("Email ya existe");
     }
 
-    user.email = req.body.email;
     user.name = req.body.name;
+    user.email = req.body.email;
+    
+    const salt = bcrypt.genSaltSync();//para generar un hash 
+    const pass = bcrypt.hashSync(req.body.passw, salt);
+    user.passw = pass;
+    
+    user.rol = req.body.rol;
     user.status = req.body.status;
     user.updateDate = new Date();
 
@@ -98,7 +134,7 @@ router.put("/:usuarioId", async function (req, res) {
   }
 });
 
-router.delete("/:usuarioId", async (req, res) => {
+router.delete("/:usuarioId", [validarJWT, validarRolAdmin],async (req, res) => {
   try {
     //obtener usuario por id
     let user = await Usuario.findById(req.params.usuarioId);
