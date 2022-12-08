@@ -28,6 +28,7 @@ app.use("/marca", MarcaRouter);
 app.use("/tipo-equipo", TipoRouter);
 app.use("/inventario", InventarioRouter);
 
+//Finalmente levantamos el servidor
 app.listen(port, () => {
   console.log(`Ejemplo de app ejecutandose en el puerto ${port}`);
 });

@@ -14,17 +14,18 @@ router.post(
   ],
   async (req, res) => {
     try {
+      //validamos los campos
       const validator = validationResult(req);
       if (!validator.isEmpty()) {
+        //si algun campo está´vació, entonces llamamos el metodo array que guarda los mensajes de validacion
         return res.status(400).json({ mensaje: validator.array() });
       }
-
-
+      //preguntamos si hay un usuario con el email 
       const usuario = await Usuario.findOne({ email: req.body.email });
       if (!usuario) {
         return res.status(400).json({ mensaje: "Usuario no existe" });
       }
-      //validamos que la contraseña sea igaul
+      //si el usuario existe comparamos las contraseñas 
       const passwEsIgual = bcrypt.compareSync(req.body.passw, usuario.passw);
       if (!passwEsIgual) {
         return res.status(400).json({ mensaje: "Usuario no existe" });
@@ -32,6 +33,7 @@ router.post(
       //generamos el token
       const token = generarJWT(usuario);
 
+      //devolvemos la informacion del usuario y el token que generamos 
       res.json({
         _id: usuario._id,
         nombre: usuario.name,

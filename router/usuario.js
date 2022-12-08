@@ -16,7 +16,7 @@ router.post(
     check("name", "name.error").not().isEmpty(),
     check("email", "emal.error").isEmail(),
     check("passw", "passw.error").not().isEmpty(),
-    check("rol", "name.error").isIn(["Admin", "Docente"]),
+    check("rol", "rol.error").isIn(["Admin", "Docente"]),
     check("status", "status.error").isIn(["Activo", "Inactivo"]),
     validarJWT,
     validarRolAdmin
@@ -36,13 +36,13 @@ router.post(
       if (exist) {
         return res.status(400).send("El email ya existe");
       }
-
+      //seteamos los campos que nos llegan en el cuerpo de la petición 
       let user = new Usuario();
       user.name = req.body.name;
       user.email = req.body.email;
       
-      const salt = bcrypt.genSaltSync();//para generar un hash 
-      const pass = bcrypt.hashSync(req.body.passw, salt);
+      const salt = bcrypt.genSaltSync();//para generar un hash único 
+      const pass = bcrypt.hashSync(req.body.passw, salt); // generamos hash aleatorio
       user.passw = pass;
       
       user.rol = req.body.rol;
